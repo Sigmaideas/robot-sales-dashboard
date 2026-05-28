@@ -112,6 +112,41 @@ select#year-select:hover { border-color: #94a3b8; }
   background: rgba(59, 130, 246, 0.08);
 }
 
+.instance {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  max-width: 100%;
+}
+
+.instance-name {
+  font-size: 10px;
+  line-height: 1.2;
+  color: #475569;
+  text-align: center;
+  max-width: 100%;
+  word-break: break-all;
+  cursor: text;
+  min-height: 0;
+}
+
+.instance-name:empty { display: none; }
+
+.instance-name-input {
+  font-size: 10px;
+  line-height: 1.2;
+  border: 1px solid #3b82f6;
+  border-radius: 4px;
+  padding: 1px 4px;
+  width: 70px;
+  text-align: center;
+  font-family: inherit;
+  color: #0f172a;
+  background: #ffffff;
+  outline: none;
+}
+
 .robot-icon {
   width: auto;
   max-width: 100%;

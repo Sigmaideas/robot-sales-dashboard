@@ -42,13 +42,24 @@ function emptyYear() {
 // 이전 버전(varis / storage / deuce / baris) 데이터가 있으면 새 ID 로 변환.
 const LEGACY_ID_MAP = { varis: 'barisbrew', baris: 'barisbrew', storage: 'storagy', deuce: 'deux' };
 
+// 각 월의 값은 { robotId: [name1, name2, ...] } 형식. 이름은 빈 문자열일 수 있음.
+// 옛 형식 { robotId: count } 는 빈 이름 배열로 변환.
 function migrateMonth(monthObj) {
   const out = {};
   let migrated = false;
   for (const [k, v] of Object.entries(monthObj)) {
     const newKey = LEGACY_ID_MAP[k] || k;
     if (newKey !== k) migrated = true;
-    out[newKey] = (out[newKey] || 0) + v;
+    let arr;
+    if (typeof v === 'number') {
+      arr = new Array(v).fill('');
+      migrated = true;
+    } else if (Array.isArray(v)) {
+      arr = v.map(x => (typeof x === 'string' ? x : ''));
+    } else {
+      arr = [];
+    }
+    out[newKey] = (out[newKey] || []).concat(arr);
   }
   return { obj: out, migrated };
 }
@@ -80,33 +91,40 @@ function saveYear() {
   localStorage.setItem(storageKey(state.year), JSON.stringify(state.data));
 }
 
-function ensureSampleData() {
-  if (localStorage.getItem(storageKey(2026))) return;
-  const sample = emptyYear();
-  sample[1] = { barisbrew: 3, storagy: 2, deux: 1 };
-  sample[2] = { barisbrew: 5, storagy: 1, deux: 2, barisbrewX: 1 };
-  sample[3] = { barisbrew: 2, storagy: 4 };
-  sample[4] = { barisbrew: 6, storagy: 3, deux: 2, barisbrewX: 2 };
-  localStorage.setItem(storageKey(2026), JSON.stringify(sample));
+function getInstances(month, modelId) {
+  const v = state.data[month]?.[modelId];
+  return Array.isArray(v) ? v : [];
 }
 
 function getCount(month, modelId) {
-  return state.data[month]?.[modelId] || 0;
+  return getInstances(month, modelId).length;
 }
 
-function setCount(month, modelId, count) {
+function setInstances(month, modelId, arr) {
   if (!state.data[month]) state.data[month] = {};
-  if (count <= 0) delete state.data[month][modelId];
-  else state.data[month][modelId] = count;
+  if (arr.length === 0) delete state.data[month][modelId];
+  else state.data[month][modelId] = arr;
 }
 
-function addOne(month, modelId) {
-  setCount(month, modelId, getCount(month, modelId) + 1);
+function addInstance(month, modelId, name = '') {
+  const arr = getInstances(month, modelId).slice();
+  arr.push(name);
+  setInstances(month, modelId, arr);
 }
 
-function removeOne(month, modelId) {
-  const next = getCount(month, modelId) - 1;
-  setCount(month, modelId, next < 0 ? 0 : next);
+function removeInstanceAt(month, modelId, index) {
+  const arr = getInstances(month, modelId).slice();
+  if (index < 0 || index >= arr.length) return '';
+  const [removed] = arr.splice(index, 1);
+  setInstances(month, modelId, arr);
+  return removed;
+}
+
+function setInstanceName(month, modelId, index, name) {
+  const arr = getInstances(month, modelId).slice();
+  if (index < 0 || index >= arr.length) return;
+  arr[index] = name;
+  setInstances(month, modelId, arr);
 }
 
 // ---------- 렌더링 ----------
@@ -134,10 +152,13 @@ function renderColumns() {
     let total = 0;
     let priceTotal = 0;
     for (const robot of ROBOTS) {
-      const count = getCount(m, robot.id);
-      total += count;
-      priceTotal += count * robot.price;
-      for (let i = 0; i < count; i++) {
+      const names = getInstances(m, robot.id);
+      total += names.length;
+      priceTotal += names.length * robot.price;
+      for (let i = 0; i < names.length; i++) {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'instance';
+
         const icon = document.createElement('img');
         icon.src = robot.icon;
         icon.alt = robot.name;
@@ -146,9 +167,21 @@ function renderColumns() {
         icon.dataset.action = 'move';
         icon.dataset.model = robot.id;
         icon.dataset.fromMonth = String(m);
+        icon.dataset.instanceIndex = String(i);
         icon.addEventListener('dragstart', onDragStart);
         icon.addEventListener('dragend', onDragEnd);
-        dropzone.appendChild(icon);
+        icon.addEventListener('dblclick', onIconDoubleClick);
+
+        const nameEl = document.createElement('div');
+        nameEl.className = 'instance-name';
+        nameEl.textContent = names[i] || '';
+        nameEl.dataset.month = String(m);
+        nameEl.dataset.model = robot.id;
+        nameEl.dataset.instanceIndex = String(i);
+
+        wrapper.appendChild(icon);
+        wrapper.appendChild(nameEl);
+        dropzone.appendChild(wrapper);
       }
     }
 
@@ -204,6 +237,7 @@ function onDragStart(e) {
     action: el.dataset.action,
     model: el.dataset.model,
     fromMonth: el.dataset.fromMonth ? parseInt(el.dataset.fromMonth, 10) : null,
+    instanceIndex: el.dataset.instanceIndex != null ? parseInt(el.dataset.instanceIndex, 10) : null,
   };
   e.dataTransfer.setData('text/plain', JSON.stringify(payload));
   e.dataTransfer.effectAllowed = payload.action === 'add' ? 'copy' : 'move';
@@ -237,11 +271,11 @@ function onDropMonth(e) {
   const targetMonth = parseInt(e.currentTarget.dataset.month, 10);
 
   if (payload.action === 'add') {
-    addOne(targetMonth, payload.model);
+    addInstance(targetMonth, payload.model, '');
   } else if (payload.action === 'move') {
     if (payload.fromMonth === targetMonth) return;
-    removeOne(payload.fromMonth, payload.model);
-    addOne(targetMonth, payload.model);
+    const name = removeInstanceAt(payload.fromMonth, payload.model, payload.instanceIndex);
+    addInstance(targetMonth, payload.model, name);
   }
   saveYear();
   render();
@@ -252,9 +286,59 @@ function onDropPalette(e) {
   e.currentTarget.classList.remove('drag-over');
   const payload = readPayload(e);
   if (!payload || payload.action !== 'move') return;
-  removeOne(payload.fromMonth, payload.model);
+  removeInstanceAt(payload.fromMonth, payload.model, payload.instanceIndex);
   saveYear();
   render();
+}
+
+function onIconDoubleClick(e) {
+  const icon = e.currentTarget;
+  const wrapper = icon.parentElement;
+  const nameEl = wrapper.querySelector('.instance-name');
+  if (!nameEl) return;
+  startEditName(nameEl);
+}
+
+function startEditName(nameEl) {
+  const month = parseInt(nameEl.dataset.month, 10);
+  const model = nameEl.dataset.model;
+  const index = parseInt(nameEl.dataset.instanceIndex, 10);
+
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.className = 'instance-name-input';
+  input.value = nameEl.textContent;
+  input.maxLength = 30;
+
+  let done = false;
+  const commit = () => {
+    if (done) return;
+    done = true;
+    setInstanceName(month, model, index, input.value.trim());
+    saveYear();
+    render();
+  };
+  const cancel = () => {
+    if (done) return;
+    done = true;
+    render();
+  };
+
+  input.addEventListener('blur', commit);
+  input.addEventListener('keydown', (ev) => {
+    if (ev.key === 'Enter') {
+      ev.preventDefault();
+      input.blur();
+    } else if (ev.key === 'Escape') {
+      ev.preventDefault();
+      input.removeEventListener('blur', commit);
+      cancel();
+    }
+  });
+
+  nameEl.replaceWith(input);
+  input.focus();
+  input.select();
 }
 
 // ---------- 초기화 / 셋업 ----------
@@ -331,7 +415,6 @@ function setupResetButton() {
 }
 
 function init() {
-  ensureSampleData();
   state.data = loadYear(state.year);
   setupYearSelector();
   setupPalette();
