@@ -1,0 +1,5 @@
+.DS_Store
+icons/.claude/
+icons/.playwright-mcp/
+.claude/
+node_modules/

@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>로봇 판매 대시보드</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>로봇 판매 대시보드</h1>
+    <div class="header-controls">
+      <select id="year-select" aria-label="연도 선택"></select>
+      <button id="reset-btn" class="btn btn-danger">초기화</button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <section class="main-area">
+      <div id="months-grid" class="months-grid"></div>
+    </section>
+
+    <aside id="palette" class="sidebar">
+      <h2>로봇</h2>
+      <div id="palette-list" class="palette-list"></div>
+      <p class="palette-hint">아이콘을 드래그앤 드롭할 수 있습니다.</p>
+    </aside>
+  </div>
+
+  <footer>
+    <div id="summary-breakdown" class="summary-breakdown"></div>
+    <div id="summary-total" class="summary-total"></div>
+  </footer>
+
+  <div id="modal-overlay" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div class="modal">
+      <h3 id="modal-title">초기화 확인</h3>
+      <p>
+        <span id="modal-year-text"></span>의 모든 판매 데이터가 삭제됩니다.<br>
+        계속하시겠습니까?
+      </p>
+      <div class="modal-actions">
+        <button id="modal-cancel" class="btn btn-secondary">취소</button>
+        <button id="modal-confirm" class="btn btn-danger">초기화</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
