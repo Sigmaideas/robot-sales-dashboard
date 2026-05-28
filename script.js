@@ -64,31 +64,131 @@ function migrateMonth(monthObj) {
   return { obj: out, migrated };
 }
 
-function loadYear(year) {
+// ---------- 공유 저장소 (JSONBin) ----------
+// 여러 사람이 같은 데이터를 보려면 아래 두 값을 채우세요.
+// 비워두면 기존처럼 이 브라우저에만 저장됩니다(localStorage).
+const CONFIG = {
+  BIN_ID: '6a18154921f9ee59d294c3c9',                              // JSONBin Bin ID
+  ACCESS_KEY: '$2a$10$/FHunFgrsW4KmTDQTgwwoux8C2p.JEe.Q/VFoMI8Gp/4rHCwghbnO', // Access Key (Read + Update)
+};
+
+const JSONBIN_BASE = 'https://api.jsonbin.io/v3/b';
+
+function useRemote() { return !!(CONFIG.BIN_ID && CONFIG.ACCESS_KEY); }
+
+// 전체 연도 데이터를 메모리에 캐시: { "2026": { 1:{...}, ... }, ... }
+let allData = {};
+let editing = false; // 이름 편집 중에는 원격 새로고침을 건너뜀
+
+function migrateParsedYear(parsed) {
+  const out = emptyYear();
+  if (!parsed || typeof parsed !== 'object') return out;
+  for (let m = 1; m <= 12; m++) {
+    if (parsed[m] && typeof parsed[m] === 'object') {
+      out[m] = migrateMonth(parsed[m]).obj;
+    }
+  }
+  return out;
+}
+
+function getYearData(year) {
+  if (useRemote()) return migrateParsedYear(allData[year]);
   const raw = localStorage.getItem(storageKey(year));
   if (!raw) return emptyYear();
-  try {
-    const parsed = JSON.parse(raw);
-    const out = emptyYear();
-    let anyMigrated = false;
-    for (let m = 1; m <= 12; m++) {
-      if (parsed[m] && typeof parsed[m] === 'object') {
-        const { obj, migrated } = migrateMonth(parsed[m]);
-        out[m] = obj;
-        if (migrated) anyMigrated = true;
-      }
-    }
-    if (anyMigrated) {
-      localStorage.setItem(storageKey(year), JSON.stringify(out));
-    }
-    return out;
-  } catch {
-    return emptyYear();
-  }
+  try { return migrateParsedYear(JSON.parse(raw)); }
+  catch { return emptyYear(); }
 }
 
 function saveYear() {
-  localStorage.setItem(storageKey(state.year), JSON.stringify(state.data));
+  if (useRemote()) {
+    allData[state.year] = state.data;
+    queueRemoteSave();
+  } else {
+    localStorage.setItem(storageKey(state.year), JSON.stringify(state.data));
+  }
+}
+
+async function remoteFetchAll() {
+  const res = await fetch(`${JSONBIN_BASE}/${CONFIG.BIN_ID}/latest`, {
+    headers: { 'X-Access-Key': CONFIG.ACCESS_KEY },
+  });
+  if (!res.ok) throw new Error(`불러오기 실패 (${res.status})`);
+  const json = await res.json();
+  return (json && json.record) || {};
+}
+
+async function remotePutAll(obj) {
+  const res = await fetch(`${JSONBIN_BASE}/${CONFIG.BIN_ID}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Access-Key': CONFIG.ACCESS_KEY,
+    },
+    body: JSON.stringify(obj),
+  });
+  if (!res.ok) throw new Error(`저장 실패 (${res.status})`);
+}
+
+// 저장 디바운스 + 직렬화: 연속 동작을 묶어 요청 수를 줄이고 마지막 값을 보장.
+let saveTimer = null;
+let saveInFlight = false;
+let savePending = false;
+
+function queueRemoteSave() {
+  savePending = true;
+  setSyncStatus('saving');
+  if (saveTimer) clearTimeout(saveTimer);
+  saveTimer = setTimeout(flushRemoteSave, 500);
+}
+
+async function flushRemoteSave() {
+  if (saveInFlight || !savePending) return;
+  saveInFlight = true;
+  savePending = false;
+  try {
+    await remotePutAll(allData);
+  } catch {
+    savePending = true; // 실패하면 다시 시도
+  } finally {
+    saveInFlight = false;
+    if (savePending) {
+      if (saveTimer) clearTimeout(saveTimer);
+      saveTimer = setTimeout(flushRemoteSave, 1500);
+      setSyncStatus('error');
+    } else {
+      setSyncStatus('saved');
+    }
+  }
+}
+
+// 다른 사람이 바꾼 내용을 다시 불러오기 (탭 포커스 / 새로고침 버튼)
+async function refreshFromRemote() {
+  if (!useRemote()) return;
+  if (editing || saveInFlight || savePending) return; // 편집/미저장 중엔 건너뜀
+  setSyncStatus('syncing');
+  try {
+    allData = await remoteFetchAll();
+    state.data = getYearData(state.year);
+    render();
+    setSyncStatus('saved');
+  } catch {
+    setSyncStatus('error');
+  }
+}
+
+function setSyncStatus(kind) {
+  const el = document.getElementById('sync-status');
+  if (!el) return;
+  if (!useRemote()) { el.textContent = '이 브라우저에만 저장됨'; el.className = 'sync-status local'; return; }
+  const map = {
+    saving:  ['저장 중…',   'busy'],
+    saved:   ['동기화됨',    'ok'],
+    syncing: ['불러오는 중…', 'busy'],
+    error:   ['연결 오류',   'err'],
+  };
+  const [text, cls] = map[kind] || ['', ''];
+  el.textContent = text;
+  el.className = `sync-status ${cls}`;
 }
 
 function getInstances(month, modelId) {
@@ -310,10 +410,12 @@ function startEditName(nameEl) {
   input.value = nameEl.textContent;
   input.maxLength = 30;
 
+  editing = true;
   let done = false;
   const commit = () => {
     if (done) return;
     done = true;
+    editing = false;
     setInstanceName(month, model, index, input.value.trim());
     saveYear();
     render();
@@ -321,6 +423,7 @@ function startEditName(nameEl) {
   const cancel = () => {
     if (done) return;
     done = true;
+    editing = false;
     render();
   };
 
@@ -387,9 +490,15 @@ function setupYearSelector() {
   }
   sel.addEventListener('change', () => {
     state.year = parseInt(sel.value, 10);
-    state.data = loadYear(state.year);
+    state.data = getYearData(state.year);
     render();
   });
+}
+
+function setupRefreshButton() {
+  const btn = document.getElementById('refresh-btn');
+  if (!btn) return;
+  btn.addEventListener('click', refreshFromRemote);
 }
 
 function setupResetButton() {
@@ -414,12 +523,26 @@ function setupResetButton() {
   });
 }
 
-function init() {
-  state.data = loadYear(state.year);
+async function init() {
   setupYearSelector();
   setupPalette();
   setupResetButton();
+  setupRefreshButton();
+
+  if (useRemote()) {
+    setSyncStatus('syncing');
+    try { allData = await remoteFetchAll(); }
+    catch { setSyncStatus('error'); }
+  }
+  state.data = getYearData(state.year);
   render();
+  if (useRemote()) setSyncStatus('saved');
+  else setSyncStatus('local');
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') refreshFromRemote();
+  });
+  window.addEventListener('focus', refreshFromRemote);
 }
 
 init();
