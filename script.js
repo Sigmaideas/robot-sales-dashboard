@@ -172,14 +172,17 @@ function renderColumns() {
 function renderSummary() {
   const breakdownEl = document.getElementById('summary-breakdown');
   const totalEl = document.getElementById('summary-total');
+  const totalPriceEl = document.getElementById('summary-total-price');
   const totals = {};
   let grand = 0;
+  let grandPrice = 0;
   for (const r of ROBOTS) totals[r.id] = 0;
   for (let m = 1; m <= 12; m++) {
     for (const r of ROBOTS) {
       const c = getCount(m, r.id);
       totals[r.id] += c;
       grand += c;
+      grandPrice += c * r.price;
     }
   }
   breakdownEl.innerHTML = ROBOTS.map(r =>
@@ -190,6 +193,7 @@ function renderSummary() {
      </span>`
   ).join('');
   totalEl.textContent = `총 판매 대수: ${grand}대`;
+  totalPriceEl.textContent = `총 판매 금액: ${grandPrice.toLocaleString('ko-KR')}원`;
 }
 
 // ---------- 드래그 앤 드롭 ----------

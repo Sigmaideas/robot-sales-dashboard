@@ -255,10 +255,24 @@ footer {
 .summary-breakdown .name { color: #334155; }
 .summary-breakdown .value { color: #0f172a; font-weight: 600; font-variant-numeric: tabular-nums; }
 
+.summary-totals {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
 .summary-total {
   font-size: 18px;
   font-weight: 700;
   color: #0f172a;
+  font-variant-numeric: tabular-nums;
+}
+
+.summary-total-price {
+  font-size: 15px;
+  font-weight: 600;
+  color: #334155;
   font-variant-numeric: tabular-nums;
 }
 
