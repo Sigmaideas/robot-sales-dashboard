@@ -13,6 +13,11 @@
       <span id="sync-status" class="sync-status"></span>
       <button id="refresh-btn" class="btn btn-secondary">새로고침</button>
       <select id="year-select" aria-label="연도 선택"></select>
+      <label class="goal-input-wrap">
+        목표
+        <input id="goal-input" type="number" min="0" step="1" inputmode="numeric" placeholder="0">
+        대
+      </label>
       <button id="reset-btn" class="btn btn-danger">초기화</button>
     </div>
   </header>
@@ -20,11 +25,6 @@
   <div class="layout">
     <section class="main-area">
       <div class="goal-band">
-        <label class="goal-input-wrap">
-          목표
-          <input id="goal-input" type="number" min="0" step="1" inputmode="numeric" placeholder="0">
-          대
-        </label>
         <div class="goal-progress-track">
           <div id="goal-progress-fill" class="goal-progress-fill"></div>
         </div>

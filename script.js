@@ -249,7 +249,7 @@ function renderColumns() {
     col.className = 'month-column';
 
     const dropzone = document.createElement('div');
-    dropzone.className = 'dropzone' + (m === currentMonth ? ' current-month' : '');
+    dropzone.className = 'dropzone' + (currentMonth && m <= currentMonth ? ' current-month' : '');
     dropzone.dataset.month = String(m);
     dropzone.addEventListener('dragover', onDragOver);
     dropzone.addEventListener('dragleave', onDragLeave);
