@@ -10,6 +10,11 @@ html, body {
   min-height: 100vh;
 }
 
+body {
+  display: flex;
+  flex-direction: column;
+}
+
 header {
   display: flex;
   align-items: center;
@@ -75,10 +80,13 @@ select#year-select:hover { border-color: #94a3b8; }
 .btn-secondary:hover { background: #cbd5e1; }
 
 .layout {
+  flex: 1;
   display: grid;
   grid-template-columns: 4fr 0.7fr;
+  grid-template-rows: 1fr;
   gap: 16px;
   padding: 20px 32px;
+  min-height: 0;
 }
 
 .main-area {
@@ -86,14 +94,17 @@ select#year-select:hover { border-color: #94a3b8; }
   border-radius: 12px;
   padding: 20px;
   border: 1px solid #cbd5e1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
 
 .months-grid {
   display: grid;
   grid-template-columns: repeat(12, 1fr);
   gap: 8px;
-  height: 65vh;
-  min-height: 520px;
+  flex: 1;
+  min-height: 320px;
 }
 
 .month-column {
@@ -356,7 +367,7 @@ footer {
   background: #e2e8f0;
   border-radius: 12px;
   padding: 18px 24px;
-  margin: 0 32px 32px;
+  margin: 0 32px 20px;
   display: flex;
   justify-content: space-between;
   align-items: center;
