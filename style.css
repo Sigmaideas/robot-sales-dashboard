@@ -239,6 +239,13 @@ select#year-select:hover { border-color: #94a3b8; }
   border-color: #3b82f6;
 }
 
+.goal-progress-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: #334155;
+  white-space: nowrap;
+}
+
 .goal-progress-track {
   flex: 1;
   height: 10px;
