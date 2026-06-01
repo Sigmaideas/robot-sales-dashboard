@@ -120,7 +120,13 @@ select#year-select:hover { border-color: #94a3b8; }
 .dropzone::-webkit-scrollbar { width: 6px; }
 .dropzone::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
 
-.dropzone.drag-over {
+.dropzone.current-month {
+  background: #fef3c7;
+  border-color: #fbbf24;
+}
+
+.dropzone.drag-over,
+.dropzone.current-month.drag-over {
   border-color: #3b82f6;
   background: rgba(59, 130, 246, 0.08);
 }
@@ -198,23 +204,65 @@ select#year-select:hover { border-color: #94a3b8; }
 
 .month-label .count { color: #0f172a; font-weight: 600; }
 
-.year-progress { position: relative; margin-top: 14px; display: none; }
-.year-progress.visible { display: block; }
+.goal-band {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 14px;
+}
 
-.year-progress-track {
-  position: relative;
-  height: 6px;
+.goal-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #334155;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.goal-input-wrap input {
+  width: 80px;
+  padding: 6px 8px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  font-size: 13px;
+  font-family: inherit;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  background: #ffffff;
+  color: #0f172a;
+}
+
+.goal-input-wrap input:focus {
+  outline: none;
+  border-color: #3b82f6;
+}
+
+.goal-progress-track {
+  flex: 1;
+  height: 10px;
   background: #ffffff;
   border: 1px solid #cbd5e1;
-  border-radius: 3px;
+  border-radius: 5px;
   overflow: hidden;
 }
 
-.year-progress-fill {
+.goal-progress-fill {
   height: 100%;
   background: #3b82f6;
   width: 0;
   transition: width 0.3s;
+}
+
+.goal-progress-text {
+  font-size: 13px;
+  color: #0f172a;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  white-space: nowrap;
+  min-width: 120px;
+  text-align: right;
 }
 
 .sidebar {

@@ -88,6 +88,9 @@ function migrateParsedYear(parsed) {
       out[m] = migrateMonth(parsed[m]).obj;
     }
   }
+  if (typeof parsed.goal === 'number' && parsed.goal > 0) {
+    out.goal = Math.floor(parsed.goal);
+  }
   return out;
 }
 
@@ -232,39 +235,21 @@ function setInstanceName(month, modelId, index, name) {
 function render() {
   renderColumns();
   renderSummary();
-  renderYearProgress();
-}
-
-function renderYearProgress() {
-  const wrap = document.getElementById('year-progress');
-  const fill = document.getElementById('year-progress-fill');
-  if (!wrap || !fill) return;
-
-  const today = new Date();
-  if (today.getFullYear() !== state.year) {
-    wrap.classList.remove('visible');
-    return;
-  }
-
-  const start = new Date(state.year, 0, 1);
-  const end = new Date(state.year + 1, 0, 1);
-  const progress = (today - start) / (end - start); // 0..1
-  const pct = Math.max(0, Math.min(1, progress)) * 100;
-
-  fill.style.width = pct + '%';
-  wrap.classList.add('visible');
 }
 
 function renderColumns() {
   const grid = document.getElementById('months-grid');
   grid.innerHTML = '';
 
+  const today = new Date();
+  const currentMonth = today.getFullYear() === state.year ? today.getMonth() + 1 : 0;
+
   for (let m = 1; m <= 12; m++) {
     const col = document.createElement('div');
     col.className = 'month-column';
 
     const dropzone = document.createElement('div');
-    dropzone.className = 'dropzone';
+    dropzone.className = 'dropzone' + (m === currentMonth ? ' current-month' : '');
     dropzone.dataset.month = String(m);
     dropzone.addEventListener('dragover', onDragOver);
     dropzone.addEventListener('dragleave', onDragLeave);
@@ -348,6 +333,27 @@ function renderSummary() {
   ).join('');
   totalEl.textContent = `총 판매 대수: ${grand}대`;
   totalPriceEl.textContent = `총 판매 금액: ${grandPrice.toLocaleString('ko-KR')}원`;
+  renderGoalProgress(grand);
+}
+
+function renderGoalProgress(current) {
+  const input = document.getElementById('goal-input');
+  const fill = document.getElementById('goal-progress-fill');
+  const text = document.getElementById('goal-progress-text');
+  if (!input || !fill || !text) return;
+
+  const goal = Math.max(0, Math.floor(Number(state.data.goal) || 0));
+  if (document.activeElement !== input) {
+    input.value = goal > 0 ? String(goal) : '';
+  }
+  if (goal > 0) {
+    const pct = Math.max(0, Math.min(1, current / goal)) * 100;
+    fill.style.width = pct + '%';
+    text.textContent = `${current} / ${goal}대 (${Math.round(pct)}%)`;
+  } else {
+    fill.style.width = '0%';
+    text.textContent = `현재 ${current}대`;
+  }
 }
 
 // ---------- 드래그 앤 드롭 ----------
@@ -522,6 +528,17 @@ function setupRefreshButton() {
   btn.addEventListener('click', refreshFromRemote);
 }
 
+function setupGoalInput() {
+  const input = document.getElementById('goal-input');
+  if (!input) return;
+  input.addEventListener('input', () => {
+    const n = parseInt(input.value, 10);
+    state.data.goal = Number.isFinite(n) && n > 0 ? n : 0;
+    saveYear();
+    renderSummary();
+  });
+}
+
 function setupResetButton() {
   const overlay = document.getElementById('modal-overlay');
   const yearText = document.getElementById('modal-year-text');
@@ -549,6 +566,7 @@ async function init() {
   setupPalette();
   setupResetButton();
   setupRefreshButton();
+  setupGoalInput();
 
   if (useRemote()) {
     setSyncStatus('syncing');

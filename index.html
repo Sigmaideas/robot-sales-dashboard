@@ -19,12 +19,18 @@
 
   <div class="layout">
     <section class="main-area">
-      <div id="months-grid" class="months-grid"></div>
-      <div id="year-progress" class="year-progress" aria-hidden="true">
-        <div class="year-progress-track">
-          <div id="year-progress-fill" class="year-progress-fill"></div>
+      <div class="goal-band">
+        <label class="goal-input-wrap">
+          목표
+          <input id="goal-input" type="number" min="0" step="1" inputmode="numeric" placeholder="0">
+          대
+        </label>
+        <div class="goal-progress-track">
+          <div id="goal-progress-fill" class="goal-progress-fill"></div>
         </div>
+        <span id="goal-progress-text" class="goal-progress-text"></span>
       </div>
+      <div id="months-grid" class="months-grid"></div>
     </section>
 
     <aside id="palette" class="sidebar">
