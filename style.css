@@ -282,7 +282,7 @@ select#year-select:hover { border-color: #94a3b8; }
   font-variant-numeric: tabular-nums;
   font-weight: 600;
   white-space: nowrap;
-  min-width: 140px;
+  min-width: 100px;
   text-align: right;
   line-height: 1;
 }
