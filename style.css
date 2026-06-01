@@ -244,6 +244,7 @@ select#year-select:hover { border-color: #94a3b8; }
   font-weight: 500;
   color: #334155;
   white-space: nowrap;
+  line-height: 1;
 }
 
 .goal-progress-track {
@@ -260,6 +261,19 @@ select#year-select:hover { border-color: #94a3b8; }
   background: #3b82f6;
   width: 0;
   transition: width 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.goal-progress-pct {
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 .goal-progress-text {
@@ -270,6 +284,7 @@ select#year-select:hover { border-color: #94a3b8; }
   white-space: nowrap;
   min-width: 140px;
   text-align: right;
+  line-height: 1;
 }
 
 .sidebar {

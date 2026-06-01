@@ -339,8 +339,9 @@ function renderSummary() {
 function renderGoalProgress(current) {
   const input = document.getElementById('goal-input');
   const fill = document.getElementById('goal-progress-fill');
+  const pctEl = document.getElementById('goal-progress-pct');
   const text = document.getElementById('goal-progress-text');
-  if (!input || !fill || !text) return;
+  if (!input || !fill || !text || !pctEl) return;
 
   const goal = Math.max(0, Math.floor(Number(state.data.goal) || 0));
   if (document.activeElement !== input) {
@@ -349,9 +350,11 @@ function renderGoalProgress(current) {
   if (goal > 0) {
     const pct = Math.max(0, Math.min(1, current / goal)) * 100;
     fill.style.width = pct + '%';
-    text.textContent = `${current} / ${goal}대 (${Math.round(pct)}%)`;
+    pctEl.textContent = `${Math.round(pct)}%`;
+    text.textContent = `${current} / ${goal}대`;
   } else {
     fill.style.width = '0%';
+    pctEl.textContent = '';
     text.textContent = `현재 ${current}대`;
   }
 }
