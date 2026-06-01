@@ -240,7 +240,7 @@ select#year-select:hover { border-color: #94a3b8; }
 }
 
 .goal-progress-label {
-  font-size: 13px;
+  font-size: 17px;
   font-weight: 500;
   color: #334155;
   white-space: nowrap;
@@ -248,10 +248,10 @@ select#year-select:hover { border-color: #94a3b8; }
 
 .goal-progress-track {
   flex: 1;
-  height: 10px;
+  height: 30px;
   background: #ffffff;
   border: 1px solid #cbd5e1;
-  border-radius: 5px;
+  border-radius: 15px;
   overflow: hidden;
 }
 
@@ -263,12 +263,12 @@ select#year-select:hover { border-color: #94a3b8; }
 }
 
 .goal-progress-text {
-  font-size: 13px;
+  font-size: 17px;
   color: #0f172a;
   font-variant-numeric: tabular-nums;
   font-weight: 600;
   white-space: nowrap;
-  min-width: 120px;
+  min-width: 140px;
   text-align: right;
 }
 
