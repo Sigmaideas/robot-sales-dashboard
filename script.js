@@ -232,6 +232,27 @@ function setInstanceName(month, modelId, index, name) {
 function render() {
   renderColumns();
   renderSummary();
+  renderYearProgress();
+}
+
+function renderYearProgress() {
+  const wrap = document.getElementById('year-progress');
+  const fill = document.getElementById('year-progress-fill');
+  if (!wrap || !fill) return;
+
+  const today = new Date();
+  if (today.getFullYear() !== state.year) {
+    wrap.classList.remove('visible');
+    return;
+  }
+
+  const start = new Date(state.year, 0, 1);
+  const end = new Date(state.year + 1, 0, 1);
+  const progress = (today - start) / (end - start); // 0..1
+  const pct = Math.max(0, Math.min(1, progress)) * 100;
+
+  fill.style.width = pct + '%';
+  wrap.classList.add('visible');
 }
 
 function renderColumns() {

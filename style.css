@@ -198,6 +198,25 @@ select#year-select:hover { border-color: #94a3b8; }
 
 .month-label .count { color: #0f172a; font-weight: 600; }
 
+.year-progress { position: relative; margin-top: 14px; display: none; }
+.year-progress.visible { display: block; }
+
+.year-progress-track {
+  position: relative;
+  height: 6px;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.year-progress-fill {
+  height: 100%;
+  background: #3b82f6;
+  width: 0;
+  transition: width 0.3s;
+}
+
 .sidebar {
   background: #e2e8f0;
   border-radius: 12px;
